@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>苗栗美食探索站</title>
+  <style>
+    :root {
+      --bg: #f6f8f7;
+      --card: #ffffff;
+      --text: #1f2933;
+      --muted: #52606d;
+      --primary: #2f6f4e;
+      --primary-hover: #24573d;
+      --border: #dce3df;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 20px 64px;
+    }
+    .eyebrow {
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 32px;
+      line-height: 1.25;
+    }
+    .subtitle {
+      margin: 0 0 22px;
+      color: var(--muted);
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+    select, button {
+      font-size: 15px;
+      border-radius: 8px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+    }
+    select {
+      background: #fff;
+      color: var(--text);
+    }
+    button {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button:hover {
+      background: var(--primary-hover);
+    }
+    .status {
+      min-height: 24px;
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+    .card img {
+      width: 100%;
+      max-height: 360px;
+      object-fit: cover;
+      display: block;
+      background: #e5ece8;
+    }
+    .card-body {
+      padding: 20px;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+    .tag {
+      background: #eaf3ed;
+      color: var(--primary);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+    .food-title {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+    .food-summary {
+      margin: 0 0 12px;
+      color: var(--text);
+    }
+    .must-try {
+      margin: 0;
+      font-size: 14px;
+      color: var(--muted);
+    }
+    .footer-note {
+      margin-top: 22px;
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+    .footer-note p {
+      margin: 4px 0;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="eyebrow">FLASK × MIAOLI FOOD API</div>
+    <h1>苗栗美食探索站</h1>
+    <p class="subtitle">按一下，透過 Flask 後端取得一份苗栗在地美食推薦。</p>
+
+    <div class="controls">
+      <label for="areaSelect" class="sr-only" style="display:none;">地區篩選</label>
+      <select id="areaSelect">
+        <option value="全部">全部地區</option>
+        <option value="苗栗市">苗栗市</option>
+        <option value="南庄">南庄</option>
+        <option value="公館">公館</option>
+        <option value="銅鑼">銅鑼</option>
+        <option value="大湖">大湖</option>
+        <option value="三義">三義</option>
+      </select>
+      <button id="drawBtn" type="button">換一份苗栗美食</button>
+    </div>
+
+    <div id="statusText" class="status">正在準備苗栗美食資料...</div>
+
+    <section id="foodCard" class="card" hidden>
+      <img id="foodImg" src="" alt="" />
+      <div class="card-body">
+        <div class="meta">
+          <span id="foodArea" class="tag"></span>
+          <span id="foodCategory" class="tag"></span>
+        </div>
+        <h2 id="foodTitle" class="food-title"></h2>
+        <p id="foodSummary" class="food-summary"></p>
+        <p id="foodMustTry" class="must-try"></p>
+      </div>
+    </section>
+
+    <footer class="footer-note">
+      <p id="sourceLine">資料與圖片來源：苗栗美食精選資料庫（課程範例）。</p>
+      <p>資料流：瀏覽器 → /api/food → Flask → 苗栗美食資料</p>
+    </footer>
+  </main>
+
+  <script>
+    const areaSelect = document.getElementById("areaSelect");
+    const drawBtn = document.getElementById("drawBtn");
+    const statusText = document.getElementById("statusText");
+    const foodCard = document.getElementById("foodCard");
+    const foodImg = document.getElementById("foodImg");
+    const foodArea = document.getElementById("foodArea");
+    const foodCategory = document.getElementById("foodCategory");
+    const foodTitle = document.getElementById("foodTitle");
+    const foodSummary = document.getElementById("foodSummary");
+    const foodMustTry = document.getElementById("foodMustTry");
+    const sourceLine = document.getElementById("sourceLine");
+
+    async function loadFood() {
+      drawBtn.disabled = true;
+      statusText.textContent = "正在查詢苗栗美食...";
+      try {
+        const area = encodeURIComponent(areaSelect.value);
+        const resp = await fetch(`/api/food?area=${area}`, { cache: "no-store" });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok || !data.food) {
+          throw new Error(data.error || "無法取得美食資料");
+        }
+        const item = data.food;
+        foodImg.src = item.image_url;
+        foodImg.alt = item.name;
+        foodArea.textContent = item.area;
+        foodCategory.textContent = item.category;
+        foodTitle.textContent = item.name;
+        foodSummary.textContent = item.summary;
+        foodMustTry.textContent = `必吃推薦：${item.must_try}`;
+        sourceLine.textContent = `資料與圖片來源：${data.source}。本網站為 Flask API 課程練習。`;
+        foodCard.hidden = false;
+        statusText.textContent = "載入成功！可以再換一份。";
+      } catch (err) {
+        statusText.textContent = `載入失敗：${err.message}`;
+      } finally {
+        drawBtn.disabled = false;
+      }
+    }
+
+    drawBtn.addEventListener("click", loadFood);
+    areaSelect.addEventListener("change", loadFood);
+    window.addEventListener("DOMContentLoaded", loadFood);
+  </script>
+</body>
+</html>
